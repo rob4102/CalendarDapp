@@ -46,4 +46,4 @@ Here are the main functions provided by this smart contract:
 
 In addition, this smart contract has a few public state variables for storing the calendar name, mapping users to their events, tracking all users and event creators, and keeping count of the total number of events. It also contains a few custom structs to organize information about individual calendar events and the overall set of events.
 
-Lastly, it emits several events that can be listened for: `NewEventCreated`, `EventUpdated`, `UserInvited`, and `InvitationAccepted`. These can be useful for applications to track changes in the smart contract state.
+Lastly, it emits several events that can be listened for: `NewEventCreated`, `EventUpdated`, `UserInvited`, and `InvitationAccepted`.
