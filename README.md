@@ -9,14 +9,25 @@ The Calendar factory is useful for when you need to deploy separate calendar for
 #Telos Calendar
 The Telos calendar contract is used by the Calendar Factory as a template implementation for deployments. 
 
-#Calendar One
-Calendar one is my most recent calendar proof of concept. This calendar is designed as a public contract for use by many users. There is no factory as only one contract is deployed. Here is a summary of Calendar One contract functions:
 
-Sure, here is the same text formatted with Markdown:
+# CalendarOne Contract Overview
 
-# Smart Contract Overview
+This smart contract represents a calendar system where users can create events, invite other users to events, update, and accept invitations to calendar events.
 
-This smart contract represents a calendar system where users can create, invite others to, update, and accept invitations to events.
+- **calendarName**: A public variable that stores the name of the calendar.
+
+- **userEvents**: A mapping of Ethereum addresses to arrays of CalendarEvent structs. This represents the events associated with each user.
+
+- **users**: An array that keeps track of all users who have created events.
+
+- **eventCreators**: An array that stores all the addresses of the users who have created an event.
+
+- **eventCount**: A mapping that tracks the number of events created by each user.
+
+- **eventInvitations**: A mapping of event IDs to arrays of Ethereum addresses. This represents the users invited to each event.
+
+- **totalEvents**: A counter that keeps track of the total number of events created across all users.
+
 
 ## Main Functions
 
