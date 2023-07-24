@@ -4,9 +4,13 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract CalendarDailyTelos is AccessControl {
+    string public contractName = "Daily Telos Calendar V0.2";
     bytes32 public constant MEMBER_ROLE = keccak256("MEMBER_ROLE");
     bytes32 public constant GUEST_ROLE = keccak256("GUEST_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    address[] public users; 
+    address[] public eventCreators;
+    uint public totalEvents; 
     uint public adminCount;
     uint public memberCount; 
     uint public guestCount; 
@@ -44,7 +48,6 @@ contract CalendarDailyTelos is AccessControl {
     }
 
     mapping(address => Invitation) public userInvitations;
-    string public contractName = "Daily Telos Calendar V0.2";
     mapping(address => Guest) public guests;
     mapping(address => Member) public members;
     mapping(address => Admin) public admin;
@@ -53,12 +56,9 @@ contract CalendarDailyTelos is AccessControl {
     mapping(address => CalendarEvent[]) public guestEvents;
     mapping(address => CalendarEvent[]) public adminEvents;
     mapping(address => CalendarEvent[]) public memberEvents; 
-    address[] public users; 
-    address[] public eventCreators;
     mapping(address => uint) public eventCount; 
     mapping(uint => address[]) public eventInvitations; 
-    uint public totalEvents; 
-
+    
     event EventUpdated(uint indexed eventID, string title, address indexed organizer, uint startTime, uint endTime, string metadataURI, uint timestamp);
     event UserInvited(uint indexed eventID, string title, address invitedUser);
     event InvitationAccepted(uint indexed eventID, address indexed attendee);
@@ -84,7 +84,7 @@ contract CalendarDailyTelos is AccessControl {
         _;
     } 
 
-    function revokeRole(bytes32 role, address account) public override {
+    function revokeRole(bytes32 role, address account) public override onlyAdmin {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         super.revokeRole(role, account);
         if (!hasRole(ADMIN_ROLE, account) && hasRole(MEMBER_ROLE, account)) {
@@ -94,7 +94,7 @@ contract CalendarDailyTelos is AccessControl {
         }
     }
 
-    function grantRole(bytes32 role, address account) public override {
+    function grantRole(bytes32 role, address account) public override onlyAdmin {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         super.grantRole(role, account);
         if (role == MEMBER_ROLE) {
@@ -163,6 +163,25 @@ contract CalendarDailyTelos is AccessControl {
         }
         if (!userExists) {
             users.push(memberAddress);
+        }
+    }
+}
+
+
+function addAdmins(address[] memory adminAddresses) public onlyAdmin {
+    for (uint i = 0; i < adminAddresses.length; i++) {
+        address adminAddress = adminAddresses[i];
+        _setupRole(ADMIN_ROLE, adminAddress);
+
+        bool userExists = false;
+        for (uint j = 0; j < users.length; j++) {
+            if (users[j] == adminAddress) {
+                userExists = true;
+                break;
+            }
+        }
+        if (!userExists) {
+            users.push(adminAddress);
         }
     }
 }
@@ -342,8 +361,6 @@ function includes(address[] memory array, address element) internal pure returns
     function acceptInvitation(uint eventID) public {
     // Check if the user is a member or admin
     require(hasRole(MEMBER_ROLE, msg.sender) || hasRole(ADMIN_ROLE, msg.sender), "Only members or admins can accept invitations");
-
-    // Make sure the event ID is valid and that the user was invited to this event
     uint[] memory invitedEvents = getInvitations(msg.sender);
     bool isInvited = false;
     for (uint i = 0; i < invitedEvents.length; i++) {
@@ -353,8 +370,6 @@ function includes(address[] memory array, address element) internal pure returns
         }
     }
     require(isInvited, "You are not invited to this event");
-
-    // Confirm the attendance
     CalendarEvent storage calendarEvent = eventsById[eventID];
     calendarEvent.confirmedAttendees.push(msg.sender);
     emit InvitationAccepted(eventID, msg.sender);
@@ -496,17 +511,12 @@ function includes(address[] memory array, address element) internal pure returns
        
 
     function deleteEvent(uint eventID) public {
-        require(hasRole(MEMBER_ROLE, msg.sender) || hasRole(ADMIN_ROLE, msg.sender), "Caller is not a member or admin");
-        if (hasRole(MEMBER_ROLE, msg.sender)) {
+        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not a admin");
+        if (hasRole(ADMIN_ROLE, msg.sender)) {
             require(eventID < memberEvents[msg.sender].length, "Invalid event ID");
             CalendarEvent[] storage events = memberEvents[msg.sender];
             emit EventDeleted(events[eventID].eventId, events[eventID].organizer);
             delete events[eventID];
-        } else if (hasRole(ADMIN_ROLE, msg.sender)) {
-            require(eventID < adminEvents[msg.sender].length, "Invalid event ID");
-            CalendarEvent[] storage events = adminEvents[msg.sender];
-            emit EventDeleted(events[eventID].eventId, events[eventID].organizer);
-            delete events[eventID];
-        }
+        } 
     }
 }
